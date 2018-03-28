@@ -8,7 +8,7 @@ Config
 An example of a config that recursively copies everything (except directories starting with 'append-') from the
 dotfiles' home directory to my real home directory.
 This config file should be in the parent directory of this repo. The assumption is that the scripts are called from that
-directory as well (`cd parent_dir && xosfiles/src/main.py --setup windows`).
+directory as well (`cd parent_dir && python3 xosfiles/src/main.py --setup windows`).
 
 _mapping-windows.json_
 ```
