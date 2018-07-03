@@ -25,8 +25,8 @@ class Main:
         if len(args) == 1 and args[0] in ['--setup', '--bup']:
             path = './autoparam.txt'
             with open(path, 'r') as fd:
-                name = fd.read()
-                print('name debug autoparam: ' + name)
+                name = fd.read().strip()
+                print('Using autoparam: ' + name)
                 args.append(name)
         return args
 

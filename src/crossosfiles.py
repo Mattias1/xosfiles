@@ -38,19 +38,20 @@ class CrossOsFiles:
                 shutil.copy(source, destination)
             else:
                 print('Skipping {}, as it\'s not a file or directory.'.format(f))
-        # Note: error for files that already exist ?
-
-    def makeDirs(self, directory):
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        # TODO: Doesn't work with harlequin colors
 
     def copyFileTo(self, src, dst):
         print('Copying file {}  to  {}'.format(src, dst))
         source = self.correctpath(src)
         destination = self.correctpath(dst)
+
+        destinationDir = os.path.dirname(destination)
+        self.makeDirs(destinationDir)
+
         shutil.copy(source, destination)
-        # Note: probably error for files that already exist
+
+    def makeDirs(self, directory):
+        if not os.path.exists(directory):
+            os.makedirs(directory)
 
     def loadMapping(self, name):
         return mapping.Mapping(name)
