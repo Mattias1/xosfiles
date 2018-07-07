@@ -1,19 +1,17 @@
-import os
 import mapping
 import shutil
+from pathlib import Path
 
 class CrossOsFiles:
     def setup(self, name):
         mapping = self.loadMapping(name)
-        dfdir = mapping.dotfiles_dir
         for m in mapping.copies:
-            if m.repo_is_dir() and m.disk_is_dir():
-                self.copyDirTo(dfdir + m.repo, m.disk, mapping)
-            elif m.repo_is_file() and m.disk_is_file():
-                self.copyFileTo(dfdir + m.repo, m.disk)
-            elif m.repo_is_file() and m.disk_is_dir():
-                filename = m.repo.split('/')[-1]
-                self.copyFileTo(dfdir + m.repo, m.disk + filename)
+            if m.repo.is_dir() and m.disk.is_dir():
+                self.copyDirTo(m.repo, m.disk, mapping)
+            elif m.repo.is_file() and m.disk.is_file():
+                self.copyFileTo(m.repo, m.disk)
+            elif m.repo.is_file() and m.disk.is_dir():
+                self.copyFileTo(m.repo, m.disk / m.repo.name)
             else:
                 print("Can't copy a dir to a file {}. Maybe add a '/' in the json mapping?".format(m))
         print('Done')
@@ -21,48 +19,31 @@ class CrossOsFiles:
 
     def copyDirTo(self, src, dst, mapping):
         print('Copying dir  {}  to  {}'.format(src, dst))
-        correctedSource = self.correctpath(src)
-        correctedDestination = self.correctpath(dst)
+        self.makeDirs(dst)
 
-        self.makeDirs(correctedDestination)
+        for source in src.iterdir():
+            filename = source.name
+            destination = dst / filename
 
-        filenames = os.listdir(correctedSource)
-        for f in filenames:
-            source = correctedSource + f
-            destination = correctedDestination + f
-
-            if os.path.isdir(source):
-                if not mapping.isAppendsDir(f):
-                    self.copyDirTo(src + f + '/', dst + f + '/', mapping)
-            elif os.path.isfile(source):
+            if source.is_dir():
+                if not mapping.isAppendsDir(filename):
+                    self.copyDirTo(source, destination, mapping)
+            elif source.is_file():
                 shutil.copy(source, destination)
             else:
-                print('Skipping {}, as it\'s not a file or directory.'.format(f))
+                print('Skipping {}, as it\'s not a file or directory.'.format(filename))
 
     def copyFileTo(self, src, dst):
         print('Copying file {}  to  {}'.format(src, dst))
-        source = self.correctpath(src)
-        destination = self.correctpath(dst)
+        self.makeDirs(dst.parent)
 
-        destinationDir = os.path.dirname(destination)
-        self.makeDirs(destinationDir)
-
-        shutil.copy(source, destination)
+        shutil.copy(src, dst)
 
     def makeDirs(self, directory):
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+        directory.mkdir(parents = True, exist_ok = True)
 
     def loadMapping(self, name):
         return mapping.Mapping(name)
-
-    def correctpath(self, path):
-        if path[0] == '~':
-            path = os.path.expanduser('~') + path[1:]
-        path = path.replace('\\\\', '\\')
-        path = path.replace('\\', '/')
-        # path = path.replace(' ', '\ ') # Breaks things in windows, but maybe needed in linux? Maybe just don't use spaces there? :P
-        return path
 
 
     # Backup
@@ -77,7 +58,7 @@ class CrossOsFiles:
 #   - append-windows/
 # - rest/
 # - setup
-#   - scripts/
+#   - xosfiles/
 #   - setup.sh          (calling python script)
 #   - bup.sh            (calling python script)
 #   - mapping-linux.json

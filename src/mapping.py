@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 class Mapping:
     def __init__(self, name):
@@ -10,7 +11,8 @@ class Mapping:
         self.load(name)
 
     def load(self, name):
-        mappingContent = self.loadJson('./mapping-{}.json'.format(name))
+        mappingPath = Path('./mapping-{}.json'.format(name))
+        mappingContent = self.loadJson(mappingPath)
         extend = val(mappingContent, 'extend')
         if (extend != None):
             self.load(extend)
@@ -26,10 +28,10 @@ class Mapping:
 
     def parseJson(self, name, mappingContent):
         self.subdirs.append(name)
-        self.dotfiles_dir = valOr(mappingContent, 'dotfiles-dir', self.dotfiles_dir)
+        self.dotfiles_dir = Path(valOr(mappingContent, 'dotfiles-dir', self.dotfiles_dir))
         self.append_prefix = valOr(mappingContent, 'append-prefix', self.append_prefix)
         copiesVal = valOr(mappingContent, 'copies', [])
-        self.copies.extend([MapDir(repo, disk) for (repo, disk) in copiesVal])
+        self.copies.extend([MapDir(self.dotfiles_dir, repo, disk) for (repo, disk) in copiesVal])
 
     def isAppendsDir(self, directory):
         # TODO
@@ -39,24 +41,12 @@ class Mapping:
 
 
 class MapDir:
-    def __init__(self, repo, disk):
-        self.repo = repo
-        self.disk = disk
+    def __init__(self, dotfiles_dir, repo, disk):
+        self.repo = (dotfiles_dir / repo).expanduser().resolve()
+        self.disk = Path(disk).expanduser().resolve()
 
     def __str__(self):
         return '({}, {})'.format(self.repo, self.disk)
-
-    def repo_is_dir(self):
-        return self.repo[-1] == '/'
-
-    def repo_is_file(self):
-        return self.repo[-1] != '/'
-
-    def disk_is_dir(self):
-        return self.disk[-1] == '/'
-
-    def disk_is_file(self):
-        return self.disk[-1] != '/'
 
 
 def val(content, key):

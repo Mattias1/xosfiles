@@ -1,5 +1,6 @@
 import crossosfiles
 import sys
+from pathlib import Path
 
 class Main:
     def start(self, args):
@@ -23,7 +24,7 @@ class Main:
 
     def addAutoParamName(self, args):
         if len(args) == 1 and args[0] in ['--setup', '--bup']:
-            path = './autoparam.txt'
+            path = Path('./autoparam.txt')
             with open(path, 'r') as fd:
                 name = fd.read().strip()
                 print('Using autoparam: ' + name)
