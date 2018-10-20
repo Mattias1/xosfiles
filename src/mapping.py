@@ -1,12 +1,20 @@
 import json
 from pathlib import Path
+from substitutefile import SubstituteFile
+
 
 class Mapping:
     def __init__(self, name):
         self.dotfiles_dir = ''
         self.subdirs = []
         self.copies = []
-        self.append_prefix = 'append-'
+
+        self.substitute_prefix = 'substitute-'
+        self.variable_prefix = '${'
+        self.variable_suffix = '}'
+        self.variable_assignment = '='
+        self.multiline_open = '{'
+        self.multiline_close = '}'
 
         self.load(name)
 
@@ -29,15 +37,36 @@ class Mapping:
     def parseJson(self, name, mappingContent):
         self.subdirs.append(name)
         self.dotfiles_dir = Path(valOr(mappingContent, 'dotfiles-dir', self.dotfiles_dir))
-        self.append_prefix = valOr(mappingContent, 'append-prefix', self.append_prefix)
+
+        self.substitute_prefix = valOr(mappingContent, 'substitute-prefix', self.substitute_prefix)
+        self.variable_prefix = valOr(mappingContent, 'variable-prefix', self.variable_prefix)
+        self.variable_suffix = valOr(mappingContent, 'variable-suffix', self.variable_suffix)
+        self.variable_assignment = valOr(mappingContent, 'variable-assignment', self.variable_assignment)
+        self.multiline_open = valOr(mappingContent, 'multiline-open', self.multiline_open)
+        self.multiline_close = valOr(mappingContent, 'multiline-close', self.multiline_close)
+
         copiesVal = valOr(mappingContent, 'copies', [])
         self.copies.extend([MapDir(self.dotfiles_dir, repo, disk) for (repo, disk) in copiesVal])
 
-    def isAppendsDir(self, directory):
-        # TODO
-        # return directory.startsWith(self.append_prefix)
-        l = len(self.append_prefix)
-        return directory[:l] == self.append_prefix
+    def isSubstituteDir(self, directory):
+        l = len(self.substitute_prefix)
+        return directory[:l] == self.substitute_prefix
+
+    def getSubstituteFile(self, path):
+        result = None
+
+        filename = path.name
+        parentdir = path.parent
+        for subdirname in self.subdirs:
+            subsdir = parentdir / (self.substitute_prefix + subdirname)
+            subsfile = subsdir / filename
+            if subsdir.is_dir() and subsfile.is_file():
+                if result == None:
+                    result = SubstituteFile(subsfile, self)
+                else:
+                    result.load(subsfile, self)
+
+        return result
 
 
 class MapDir:
