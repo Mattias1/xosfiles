@@ -29,7 +29,7 @@ class SubstituteFile:
                 content = ''.join(innerlines)
             else:
                 content = rest.strip()
-            self.subs[varname.strip()] = content
+            self.subs[mapping.variable_prefix + varname.strip() + mapping.variable_suffix] = content
 
     def alterFile(self, fd):
         result = []
