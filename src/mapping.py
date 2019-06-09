@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+
 class Mapping:
     def __init__(self, name):
         self.dotfiles_dir = ''
@@ -20,18 +21,21 @@ class Mapping:
 
     def loadJson(self, path):
         try:
-            with open(path, 'r') as fd:
+            with open(str(path), 'r') as fd:
                 return json.load(fd)
         except:
-            print('Could not open or parse the json file (' + path + ').')
+            print('Could not open or parse the json file (' + str(path) + ').')
             return None
 
     def parseJson(self, name, mappingContent):
         self.subdirs.append(name)
-        self.dotfiles_dir = Path(valOr(mappingContent, 'dotfiles-dir', self.dotfiles_dir))
-        self.append_prefix = valOr(mappingContent, 'append-prefix', self.append_prefix)
+        self.dotfiles_dir = Path(
+            valOr(mappingContent, 'dotfiles-dir', self.dotfiles_dir))
+        self.append_prefix = valOr(
+            mappingContent, 'append-prefix', self.append_prefix)
         copiesVal = valOr(mappingContent, 'copies', [])
-        self.copies.extend([MapDir(self.dotfiles_dir, repo, disk) for (repo, disk) in copiesVal])
+        self.copies.extend([MapDir(self.dotfiles_dir, repo, disk)
+                            for (repo, disk) in copiesVal])
 
     def isAppendsDir(self, directory):
         # TODO
@@ -54,6 +58,7 @@ def val(content, key):
         return content[key]
     except (TypeError, KeyError):
         return None
+
 
 def valOr(content, key, alternative):
     value = val(content, key)
