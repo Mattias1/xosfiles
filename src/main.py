@@ -2,6 +2,7 @@ import crossosfiles
 import sys
 from pathlib import Path
 
+
 class Main:
     def start(self, args):
         if self.help(args): return
@@ -45,6 +46,7 @@ class Main:
             xosfiles.bup(name)
             return True
         return False
+
 
 main = Main()
 main.start(sys.argv[1:])

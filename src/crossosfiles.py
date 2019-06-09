@@ -2,6 +2,7 @@ import mapping
 import shutil
 from pathlib import Path
 
+
 class CrossOsFiles:
     def setup(self, name):
         mapping = self.loadMapping(name)
@@ -9,9 +10,9 @@ class CrossOsFiles:
             if m.repo.is_dir() and m.disk.is_dir():
                 self.copyDirTo(m.repo, m.disk, mapping)
             elif m.repo.is_file() and m.disk.is_file():
-                self.copyFileTo(m.repo, m.disk)
+                self.copyFileTo(m.repo, m.disk, mapping)
             elif m.repo.is_file() and m.disk.is_dir():
-                self.copyFileTo(m.repo, m.disk / m.repo.name)
+                self.copyFileTo(m.repo, m.disk / m.repo.name, mapping)
             else:
                 print("Can't copy a dir to a file {}. Maybe add a '/' in the json mapping?".format(m))
         print('Done')
@@ -26,18 +27,34 @@ class CrossOsFiles:
             destination = dst / filename
 
             if source.is_dir():
-                if not mapping.isAppendsDir(filename):
+                if not mapping.isSubstituteDir(filename):
                     self.copyDirTo(source, destination, mapping)
             elif source.is_file():
-                shutil.copy(source, destination)
+                self.copyFileTo(source, destination, mapping)
             else:
                 print('Skipping {}, as it\'s not a file or directory.'.format(filename))
 
-    def copyFileTo(self, src, dst):
+    def copyFileTo(self, src, dst, mapping):
         print('Copying file {}  to  {}'.format(src, dst))
         self.makeDirs(dst.parent)
 
-        shutil.copy(src, dst)
+        subsfile = mapping.getSubstituteFile(src)
+        if subsfile == None:
+            shutil.copy(src, dst)
+        else:
+            try:
+                with open(src, 'r') as fd:
+                    content = subsfile.alterFile(fd)
+            except:
+                print('Could not open the file to be altered (' + src + ').')
+                return
+
+            try:
+                with open(dst, 'w') as fd:
+                    fd.write(''.join(content))
+            except:
+                print('Error when trying to write the altered file (' + dst + ').')
+                return
 
     def makeDirs(self, directory):
         directory.mkdir(parents = True, exist_ok = True)
