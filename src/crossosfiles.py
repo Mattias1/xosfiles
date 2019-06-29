@@ -7,16 +7,17 @@ class CrossOsFiles:
     def setup(self, name):
         mapping = self.loadMapping(name)
         for m in mapping.copies:
-            if m.repo.is_dir() and m.disk.is_dir():
+            if m.repo.is_dir() and m.disk_is_dir():
                 self.copyDirTo(m.repo, m.disk, mapping)
-            elif m.repo.is_file() and m.disk.is_file():
+            elif m.repo.is_file() and m.disk_is_file():
                 self.copyFileTo(m.repo, m.disk, mapping)
-            elif m.repo.is_file() and m.disk.is_dir():
+            elif m.repo.is_file() and m.disk_is_dir():
                 self.copyFileTo(m.repo, m.disk / m.repo.name, mapping)
-            else:
+            elif m.repo.is_dir():
                 print("Can't copy a dir to a file {}. Maybe add a '/' in the json mapping?".format(m))
+            else:
+                print("Can't copy this, err, thing {}.".format(m))
         print('Done')
-
 
     def copyDirTo(self, src, dst, mapping):
         print('Copying dir  {}  to  {}'.format(src, dst))
@@ -57,13 +58,13 @@ class CrossOsFiles:
                 return
 
     def makeDirs(self, directory):
-        directory.mkdir(parents = True, exist_ok = True)
+        directory.mkdir(parents=True, exist_ok=True)
 
     def loadMapping(self, name):
         return mapping.Mapping(name)
 
-
     # Backup
+
     def bup(self, name):
         self.loadMapping(name)
         print('Backup: ' + name)

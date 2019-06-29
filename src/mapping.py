@@ -3,7 +3,6 @@ from pathlib import Path
 from substitutefile import SubstituteFile
 
 
-
 class Mapping:
     def __init__(self, name):
         self.dotfiles_dir = ''
@@ -76,8 +75,19 @@ class MapDir:
         self.repo = (dotfiles_dir / repo).expanduser().resolve()
         self.disk = Path(disk).expanduser().resolve()
 
+        self.disk_should_be_dir = self.disk.is_dir() or (not self.disk.is_file() and disk[-1] == '/')
+        self.disk_should_be_file = self.disk.is_file() or (not self.disk.is_dir() and disk[-1] != '/')
+        if self.disk_should_be_dir and not self.disk.is_dir():
+            print(disk)
+
     def __str__(self):
         return '({}, {})'.format(self.repo, self.disk)
+
+    def disk_is_dir(self):
+        return self.disk_should_be_dir
+
+    def disk_is_file(self):
+        return self.disk_should_be_file
 
 
 def val(content, key):
@@ -90,4 +100,3 @@ def val(content, key):
 def valOr(content, key, alternative):
     value = val(content, key)
     return alternative if value == None or value == '' or value == [] else value
-
